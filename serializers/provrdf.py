@@ -18,12 +18,14 @@ from rdflib.namespace import RDF, RDFS, XSD
 
 import prov.model as pm
 from prov.constants import (
-    PROV, PROV_ID_ATTRIBUTES_MAP, PROV_N_MAP, PROV_BASE_CLS, XSD_QNAME,
-    PROV_END, PROV_START, PROV_USAGE, PROV_GENERATION, PROV_DERIVATION, PROV_INVALIDATION,
+    PROV, DLC, PROV_ID_ATTRIBUTES_MAP, PROV_N_MAP, PROV_BASE_CLS, XSD_QNAME,
+    PROV_END, PROV_START, PROV_USAGE, PROV_GENERATION,DLC_GENERATION ,PROV_DERIVATION, PROV_INVALIDATION,
     PROV_ALTERNATE, PROV_MENTION, PROV_DELEGATION, PROV_ACTIVITY, PROV_ATTR_STARTTIME,
     PROV_ATTR_ENDTIME, PROV_LOCATION, PROV_ATTR_TIME, PROV_ROLE, PROV_COMMUNICATION,
     PROV_ATTR_INFORMANT, PROV_ATTR_RESPONSIBLE, PROV_ATTR_TRIGGER, PROV_ATTR_ENDER,
     PROV_ATTR_STARTER, PROV_ATTR_USED_ENTITY)
+
+
 from prov.serializers import Serializer, Error
 
 
@@ -205,6 +207,7 @@ class ProvRDFSerializer(Serializer):
             container = ConjunctiveGraph(identifier=identifier)
             nm = container.namespace_manager
             nm.bind('prov', PROV.uri)
+            nm.bind('dlc', DLC.uri)
 
         for namespace in bundle.namespaces:
             container.bind(namespace.prefix, namespace.uri)
@@ -233,7 +236,10 @@ class ProvRDFSerializer(Serializer):
                 has_qualifiers = len(record.extra_attributes) > 0 or formal_qualifiers
                 for idx, (attr, value) in enumerate(all_attributes):
                     if record.is_relation():
-                        pred = URIRef(PROV[PROV_N_MAP[rec_type]].uri)
+                        pred = URIRef(PROV[PROV_N_MAP[rec_type]].uri )
+                        if pred.startswith('http://www.w3.org/ns/prov#/will') or pred.startswith('http://www.w3.org/ns/prov#/wasPartOf'):
+                            pred = URIRef(DLC[PROV_N_MAP[rec_type]].uri)
+#                            print(pred)
                         # create bnode relation
                         if bnode is None:
                             valid_formal_indices = set()
@@ -410,6 +416,7 @@ class ProvRDFSerializer(Serializer):
                            URIRef(PROV['wasAttributedTo'].uri): 'attribution',
                            URIRef(PROV['wasInformedBy'].uri): 'communication',
                            URIRef(PROV['wasGeneratedBy'].uri): 'generation',
+                           URIRef(PROV['willBeGeneratedBy'].uri): 'dlcgeneration',
                            URIRef(PROV['wasInfluencedBy'].uri): 'influence',
                            URIRef(PROV['wasInvalidatedBy'].uri): 'invalidation',
                            URIRef(PROV['wasEndedBy'].uri): 'end',

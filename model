@@ -1,0 +1,51 @@
+
+#"Dlc_data_life_cycle"
+{
+  Dlc_data_life_cycle_id : <objectID1> ,
+  name : "Dlc_data_life_cycle1",
+  usecaseplan : <objectID3>,
+  usecaseprov : <objectID4>,
+  attribution :  { entity : Dlc_data_life_cycle_id , agent : <objectID2>},
+  generation : { entity : Dlc_data_life_cycle_id , activity :  , at_time : "time" }
+}
+
+{
+  user_id : <objectID2>,
+  name : "username1" ,
+  nickname : "user nickmane1" ,
+  mail : "username@mail.com",
+  organisation: "user organisation",
+}
+
+
+{
+  use_case_plan_id : <objectID3>,
+  name : "use_case_plan_1",
+  type : "PLAN",
+  document : {
+      namespaceDeclarations : "", #permet de stocker les namespaces du document
+      expression : "" ,           #stocke les informations de provenance
+      bundle : ""                 #stocke le inforamations de provenance si il y a un bundle.
+                                  #Cette organisation du stockage est celle de prov-n et est celle qui est utilisé par pyprov lors de la creation d un provdocument
+          },
+  attribution: { "entity" : <objectID3> ,"agent" : <objectID2> } ,
+  usage : {"entity" : <objectID3> , "activity" : "convert" },
+  derivation: { "entity" : <objectID3> , "entity" : <objectID1>},
+  generation : {"entity" : <objectID3> , "activity" :  "create_DLC"},
+}
+
+
+{
+  use_case_prov_id : <objectID4>,
+  name : "use_case_prov_1",
+  type : "provenance template",
+  document : {
+      namespace :"",
+      expression : "" ,
+      bundle : ""
+          },
+  attribution: {"entity" : <objectID4> , "agent" : "DLC_database_service"},
+  derivation: { "entity": <objectID4> , "entity" : <objectID3> },
+  generation : { "entity": <objectID4> , "activity" : "Convert" },
+
+}

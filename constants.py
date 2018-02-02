@@ -8,28 +8,39 @@ __author__ = 'Trung Dong Huynh'
 __email__ = 'trungdong@donggiang.com'
 
 
-XSD = Namespace('xsd', 'http://www.w3.org/2001/XMLSchema#')
-PROV = Namespace('prov', 'http://www.w3.org/ns/prov#')
+XSD = Namespace('xsd', 'http://www.w3.org/2001/XMLSchema#/')
+PROV = Namespace('prov', 'http://www.w3.org/ns/prov#/')
+DLC = Namespace('dlc','https://purl.org/eudat/dlc/')
 XSI = Namespace('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+#RDFS = Namespace()
 
 #  C1. Entities/Activities
 PROV_ENTITY = PROV['Entity']
 PROV_ACTIVITY = PROV['Activity']
 PROV_GENERATION = PROV['Generation']
+DLC_GENERATION = DLC['Generation']
 PROV_USAGE = PROV['Usage']
+DLC_USAGE = DLC['DlcUsage']
 PROV_COMMUNICATION = PROV['Communication']
+DLC_COMMUNICATION = DLC['Communication']
 PROV_START = PROV['Start']
 PROV_END = PROV['End']
 PROV_INVALIDATION = PROV['Invalidation']
-
+DLC_INVALIDATION = DLC['DlcInvalidation']
+PROV_PARTITION = PROV['partition']
+DLC_PARTITION = DLC['partition']
 #  C2. Derivations
 PROV_DERIVATION = PROV['Derivation']
+DLC_DERIVATION =  DLC['DlcDerivation']
 
 #  C3. Agents/Responsibility
 PROV_AGENT = PROV['Agent']
 PROV_ATTRIBUTION = PROV['Attribution']
+DLC_ATTRIBUTION = DLC['Attribution']
 PROV_ASSOCIATION = PROV['Association']
+DLC_ASSOCIATION = DLC['DlcAssociation']
 PROV_DELEGATION = PROV['Delegation']
+DLC_DELEGATION = DLC['DlcDelegation']
 PROV_INFLUENCE = PROV['Influence']
 #  C4. Bundles
 PROV_BUNDLE = PROV['Bundle']
@@ -39,27 +50,39 @@ PROV_SPECIALIZATION = PROV['Specialization']
 PROV_MENTION = PROV['Mention']
 #  C6. Collections
 PROV_MEMBERSHIP = PROV['Membership']
+DLC_MEMBERSHIP = DLC['DlcMembership']
 
 PROV_N_MAP = {
     PROV_ENTITY:               u'entity',
     PROV_ACTIVITY:             u'activity',
     PROV_GENERATION:           u'wasGeneratedBy',
+    DLC_GENERATION:            u'willBeGeneratedBy',
     PROV_USAGE:                u'used',
+    DLC_USAGE:                 u'willUse',
     PROV_COMMUNICATION:        u'wasInformedBy',
+    DLC_COMMUNICATION:         u'willBeInformedBy',
     PROV_START:                u'wasStartedBy',
     PROV_END:                  u'wasEndedBy',
     PROV_INVALIDATION:         u'wasInvalidatedBy',
+    DLC_INVALIDATION:          u'willBeInvalidatedBy',
     PROV_DERIVATION:           u'wasDerivedFrom',
+    DLC_DERIVATION:            u'willBeDerivedFrom',
     PROV_AGENT:                u'agent',
     PROV_ATTRIBUTION:          u'wasAttributedTo',
+    DLC_ATTRIBUTION:           u'willBeAttributedTo',
     PROV_ASSOCIATION:          u'wasAssociatedWith',
+    DLC_ASSOCIATION:           u'willBeAssociatedWith',
     PROV_DELEGATION:           u'actedOnBehalfOf',
+    DLC_DELEGATION:            u'willActOnBehalfOf',
     PROV_INFLUENCE:            u'wasInfluencedBy',
     PROV_ALTERNATE:            u'alternateOf',
     PROV_SPECIALIZATION:       u'specializationOf',
     PROV_MENTION:              u'mentionOf',
     PROV_MEMBERSHIP:           u'hadMember',
+    DLC_MEMBERSHIP:            u'willHaveMember',
     PROV_BUNDLE:               u'bundle',
+    PROV_PARTITION:            u'wasPartOf',
+    DLC_PARTITION:             u'willBePartOf',
 }
 
 # Records defined as subtypes in PROV-N but top level types in for example
@@ -70,6 +93,8 @@ ADDITIONAL_N_MAP = {
     PROV['PrimarySource']:     u'hadPrimarySource',
     PROV['SoftwareAgent']:      u'softwareAgent',
     PROV['Person']:            u'person',
+    PROV['Pdb_file']:          u'pdb_file',
+    PROV['mmCIF']:             u'mmCIF_file',
     PROV['Organization']:      u'organization',
     PROV['Plan']:              u'plan',
     PROV['Collection']:        u'collection',
@@ -83,12 +108,19 @@ PROV_BASE_CLS = {
     PROV_ENTITY:               PROV_ENTITY,
     PROV_ACTIVITY:             PROV_ACTIVITY,
     PROV_GENERATION:           PROV_GENERATION,
+    DLC_GENERATION:            DLC_GENERATION,
     PROV_USAGE:                PROV_USAGE,
+    DLC_USAGE:                 DLC_USAGE,
     PROV_COMMUNICATION:        PROV_COMMUNICATION,
+    DLC_COMMUNICATION:         DLC_COMMUNICATION,
     PROV_START:                PROV_START,
     PROV_END:                  PROV_END,
     PROV_INVALIDATION:         PROV_INVALIDATION,
+    DLC_INVALIDATION:          DLC_INVALIDATION,
     PROV_DERIVATION:           PROV_DERIVATION,
+    DLC_DERIVATION:            DLC_DERIVATION,
+    PROV_PARTITION:            PROV_PARTITION,
+    DLC_PARTITION:             DLC_PARTITION,
     PROV['Revision']:          PROV_DERIVATION,
     PROV['Quotation']:         PROV_DERIVATION,
     PROV['PrimarySource']:     PROV_DERIVATION,
@@ -97,7 +129,9 @@ PROV_BASE_CLS = {
     PROV['Person']:            PROV_AGENT,
     PROV['Organization']:      PROV_AGENT,
     PROV_ATTRIBUTION:          PROV_ATTRIBUTION,
+    DLC_ATTRIBUTION:           DLC_ATTRIBUTION,
     PROV_ASSOCIATION:          PROV_ASSOCIATION,
+    DLC_ASSOCIATION:           DLC_ASSOCIATION,
     PROV['Plan']:              PROV_ENTITY,
     PROV_DELEGATION:           PROV_DELEGATION,
     PROV_INFLUENCE:            PROV_INFLUENCE,
@@ -107,6 +141,7 @@ PROV_BASE_CLS = {
     PROV['Collection']:        PROV_ENTITY,
     PROV['EmptyCollection']:   PROV_ENTITY,
     PROV_MEMBERSHIP:           PROV_MEMBERSHIP,
+    DLC_MEMBERSHIP:            DLC_MEMBERSHIP,
     PROV_BUNDLE:               PROV_ENTITY
 }
 

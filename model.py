@@ -7,8 +7,6 @@ PROV-DM: http://www.w3.org/TR/prov-dm/
 PROV-JSON: https://provenance.ecs.soton.ac.uk/prov-json/
 """
 
-" This is a new test"
-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
@@ -261,6 +259,14 @@ class ProvRecord(object):
         Return an exact copy of this record.
         """
         return PROV_REC_CLS[self.get_type()](
+            self._bundle, self.identifier, self.attributes
+        )
+
+    def update_prov_type(self , PROV_TYPE_):
+        """
+        Return an exact copy of this record.
+        """
+        return PROV_REC_CLS[PROV_TYPE_](
             self._bundle, self.identifier, self.attributes
         )
 
@@ -614,6 +620,25 @@ class ProvEntity(ProvElement):
         )
         return self
 
+
+
+    def willBeGeneratedBy(self, activity, time=None, attributes=None):
+        """
+        Creates a new generation record to this entity.
+
+        :param activity: Activity or string identifier of the activity involved in
+            the generation (default: None).
+        :param time: Optional time for the generation (default: None).
+            Either a :py:class:`datetime.datetime` object or a string that can be
+            parsed by :py:func:`dateutil.parser`.
+        :param attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        self._bundle.dlc_generation(
+            self, activity, time, other_attributes=attributes
+        )
+        return self
+
     def wasInvalidatedBy(self, activity, time=None, attributes=None):
         """
         Creates a new invalidation record for this entity.
@@ -630,6 +655,24 @@ class ProvEntity(ProvElement):
             self, activity, time, other_attributes=attributes
         )
         return self
+
+    def willBeInvalidatedBy(self, activity, time=None, attributes=None):
+        """
+        Creates a new invalidation record for this entity.
+
+        :param activity: Activity or string identifier of the activity involved in
+            the invalidation (default: None).
+        :param time: Optional time for the invalidation (default: None).
+            Either a :py:class:`datetime.datetime` object or a string that can be
+            parsed by :py:func:`dateutil.parser`.
+        :param attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        self._bundle.invalidation(
+            self, activity, time, other_attributes=attributes
+        )
+        return self
+
 
     def wasDerivedFrom(self, usedEntity, activity=None, generation=None,
                        usage=None, attributes=None):
@@ -652,7 +695,42 @@ class ProvEntity(ProvElement):
         )
         return self
 
+
+    def willBeDerivedFrom(self, usedEntity, activity=None, generation=None,
+                       usage=None, attributes=None):
+        """
+        Creates a new derivation record for this entity from a used entity in plan space.
+
+        :param usedEntity: Entity or a string identifier for the used entity.
+        :param activity: Activity or string identifier of the activity involved in
+            the derivation (default: None).
+        :param generation: Optionally extra activity to state qualified derivation
+            through an internal generation (default: None).
+        :param usage: Optionally extra entity to state qualified derivation through
+            an internal usage (default: None).
+        :param attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        self._bundle.derivation(
+            self, usedEntity, activity, generation, usage,
+            other_attributes=attributes
+        )
+        return self
+
+
     def wasAttributedTo(self, agent, attributes=None):
+        """
+        Creates a new attribution record between this entity and an agent.
+
+        :param agent: Agent or string identifier of the agent involved in the
+            attribution.
+        :param attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        self._bundle.attribution(self, agent, other_attributes=attributes)
+        return self
+
+    def willBeAttributedTo(self, agent, attributes=None):
         """
         Creates a new attribution record between this entity and an agent.
 
@@ -683,6 +761,15 @@ class ProvEntity(ProvElement):
         return self
 
     def hadMember(self, entity):
+        """
+        Creates a new membership record to an entity for a collection.
+
+        :param entity: Entity to be added to the collection.
+        """
+        self._bundle.membership(self, entity)
+        return self
+
+    def willHaveMember(self, entity):
         """
         Creates a new membership record to an entity for a collection.
 
@@ -736,7 +823,24 @@ class ProvActivity(ProvElement):
 
     # Convenient assertions that take the current ProvActivity as the first
     # (formal) argument
+
+
     def used(self, entity, time=None, attributes=None):
+        """
+        Creates a new usage record for this activity.
+
+        :param entity: Entity or string identifier of the entity involved in
+            the usage relationship (default: None).
+        :param time: Optional time for the usage (default: None).
+            Either a :py:class:`datetime.datetime` object or a string that can be
+            parsed by :py:func:`dateutil.parser`.
+        :param attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        self._bundle.usage(self, entity, time, other_attributes=attributes)
+        return self
+
+    def willUse(self, entity, time=None, attributes=None):
         """
         Creates a new usage record for this activity.
 
@@ -763,6 +867,49 @@ class ProvActivity(ProvElement):
             self, informant, other_attributes=attributes
         )
         return self
+
+
+    def willBeInformedBy(self, informant, attributes=None):
+        """
+        Creates a new communication record for this activity.
+
+        :param informant: The informing activity (relationship source).
+        :param attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        self._bundle.communication(
+            self, informant, other_attributes=attributes
+        )
+        return self
+
+    def wasPartOf(self, activity, attributes=None):
+        """
+        Creates a new partition record for this activity.
+
+        :param informant: The informing activity (relationship source).
+        :param attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        self._bundle.partition(
+            self, activity, other_attributes=attributes
+        )
+        return self
+
+    def willBePartOf(self, informant, attributes=None):
+        """
+        Creates a new DLC partition record for this activity.
+
+        :param informant: The informing activity (relationship source).
+        :param attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        self._bundle.partition(
+            self, informant, other_attributes=attributes
+        )
+        return self
+
+
+
 
     def wasStartedBy(self, trigger, starter=None, time=None, attributes=None):
         """
@@ -819,12 +966,37 @@ class ProvActivity(ProvElement):
         return self
 
 
+
+    def willBeAssociatedWith(self, agent, plan=None, attributes=None):
+        """
+        Creates a new association record for this activity.
+
+        :param agent: Agent or string identifier of the agent involved in the
+            association (default: None).
+        :param plan: Optionally extra entity to state qualified association through
+            an internal plan (default: None).
+        :param attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        self._bundle.association(
+            self, agent, plan, other_attributes=attributes
+        )
+        return self
+
 class ProvGeneration(ProvRelation):
     """Provenance Generation relationship."""
 
     FORMAL_ATTRIBUTES = (PROV_ATTR_ENTITY, PROV_ATTR_ACTIVITY, PROV_ATTR_TIME)
 
     _prov_type = PROV_GENERATION
+
+class DlcGeneration(ProvRelation):
+    """Provenance Generation relationship."""
+
+    FORMAL_ATTRIBUTES = (PROV_ATTR_ENTITY, PROV_ATTR_ACTIVITY, PROV_ATTR_TIME)
+
+
+    _prov_type = DLC_GENERATION
 
 
 class ProvUsage(ProvRelation):
@@ -835,12 +1007,45 @@ class ProvUsage(ProvRelation):
     _prov_type = PROV_USAGE
 
 
+class DlcUsage(ProvRelation):
+    """Provenance Usage relationship."""
+
+    FORMAL_ATTRIBUTES = (PROV_ATTR_ACTIVITY, PROV_ATTR_ENTITY, PROV_ATTR_TIME)
+
+    _prov_type = DLC_USAGE
+
+
+
+
 class ProvCommunication(ProvRelation):
     """Provenance Communication relationship."""
 
     FORMAL_ATTRIBUTES = (PROV_ATTR_INFORMED, PROV_ATTR_INFORMANT)
 
     _prov_type = PROV_COMMUNICATION
+
+
+class ProvPartition(ProvRelation):
+    """Provenance Communication relationship."""
+
+    FORMAL_ATTRIBUTES = (PROV_ATTR_INFORMED, PROV_ATTR_INFORMANT)
+
+    _prov_type = PROV_PARTITION
+
+class DlcPartition(ProvRelation):
+    """Provenance Communication relationship."""
+
+    FORMAL_ATTRIBUTES = (PROV_ATTR_INFORMED, PROV_ATTR_INFORMANT)
+
+    _prov_type = DLC_PARTITION
+
+
+class DlcCommunication(ProvRelation):
+    """Plan Communication relationship."""
+
+    FORMAL_ATTRIBUTES = (PROV_ATTR_INFORMED, PROV_ATTR_INFORMANT)
+
+    _prov_type = DLC_COMMUNICATION
 
 
 class ProvStart(ProvRelation):
@@ -869,6 +1074,14 @@ class ProvInvalidation(ProvRelation):
     _prov_type = PROV_INVALIDATION
 
 
+class DlcInvalidation(ProvRelation):
+    """Provenance Invalidation relationship."""
+
+    FORMAL_ATTRIBUTES = (PROV_ATTR_ENTITY, PROV_ATTR_ACTIVITY, PROV_ATTR_TIME)
+
+    _prov_type = DLC_INVALIDATION
+
+
 # Component 2: Derivations
 class ProvDerivation(ProvRelation):
     """Provenance Derivation relationship."""
@@ -878,6 +1091,16 @@ class ProvDerivation(ProvRelation):
                          PROV_ATTR_USAGE)
 
     _prov_type = PROV_DERIVATION
+
+
+class DlcDerivation(ProvRelation):
+    """plan Derivation relationship."""
+
+    FORMAL_ATTRIBUTES = (PROV_ATTR_GENERATED_ENTITY, PROV_ATTR_USED_ENTITY,
+                         PROV_ATTR_ACTIVITY, PROV_ATTR_GENERATION,
+                         PROV_ATTR_USAGE)
+
+    _prov_type = DLC_DERIVATION
 
 
 # Component 3: Agents, Responsibility, and Influence
@@ -904,12 +1127,39 @@ class ProvAgent(ProvElement):
         return self
 
 
+
+    def willActOnBehalfOf(self, responsible, activity=None, attributes=None):
+        """
+        Creates a new delegation record on behalf of this agent.
+
+        :param responsible: Agent the responsibility is delegated to.
+        :param activity: Optionally extra activity to state qualified delegation
+            internally (default: None).
+        :param attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        self._bundle.delegation(
+            self, responsible, activity, other_attributes=attributes
+        )
+        return self
+
+
+
+
 class ProvAttribution(ProvRelation):
     """Provenance Attribution relationship."""
 
     FORMAL_ATTRIBUTES = (PROV_ATTR_ENTITY, PROV_ATTR_AGENT)
 
     _prov_type = PROV_ATTRIBUTION
+
+
+class DlcAttribution(ProvRelation):
+    """Provenance Attribution relationship."""
+
+    FORMAL_ATTRIBUTES = (PROV_ATTR_ENTITY, PROV_ATTR_AGENT)
+
+    _prov_type = DLC_ATTRIBUTION
 
 
 class ProvAssociation(ProvRelation):
@@ -920,6 +1170,14 @@ class ProvAssociation(ProvRelation):
     _prov_type = PROV_ASSOCIATION
 
 
+class DlcAssociation(ProvRelation):
+    """Plan Association relationship."""
+
+    FORMAL_ATTRIBUTES = (PROV_ATTR_ACTIVITY, PROV_ATTR_AGENT, PROV_ATTR_PLAN)
+
+    _prov_type = DLC_ASSOCIATION
+
+
 class ProvDelegation(ProvRelation):
     """Provenance Delegation relationship."""
 
@@ -927,6 +1185,15 @@ class ProvDelegation(ProvRelation):
                          PROV_ATTR_ACTIVITY)
 
     _prov_type = PROV_DELEGATION
+
+
+class DlcDelegation(ProvRelation):
+    """Provenance Delegation relationship."""
+
+    FORMAL_ATTRIBUTES = (PROV_ATTR_DELEGATE, PROV_ATTR_RESPONSIBLE,
+                         PROV_ATTR_ACTIVITY)
+
+    _prov_type = DLC_DELEGATION
 
 
 class ProvInfluence(ProvRelation):
@@ -971,31 +1238,49 @@ class ProvMembership(ProvRelation):
 
     _prov_type = PROV_MEMBERSHIP
 
+class DlcMembership(ProvRelation):
+    """Plan Membership relationship."""
+
+    FORMAL_ATTRIBUTES = (PROV_ATTR_COLLECTION, PROV_ATTR_ENTITY)
+
+    _prov_type = DLC_MEMBERSHIP
+
 
 #  Class mappings from PROV record type
 PROV_REC_CLS = {
     PROV_ENTITY:         ProvEntity,
     PROV_ACTIVITY:       ProvActivity,
     PROV_GENERATION:     ProvGeneration,
+    DLC_GENERATION:      DlcGeneration,
     PROV_USAGE:          ProvUsage,
+    DLC_USAGE:           DlcUsage,
     PROV_COMMUNICATION:  ProvCommunication,
+    DLC_COMMUNICATION:   DlcCommunication,
     PROV_START:          ProvStart,
     PROV_END:            ProvEnd,
     PROV_INVALIDATION:   ProvInvalidation,
+    DLC_INVALIDATION:    DlcInvalidation,
     PROV_DERIVATION:     ProvDerivation,
+    DLC_DERIVATION:      DlcDerivation,
     PROV_AGENT:          ProvAgent,
     PROV_ATTRIBUTION:    ProvAttribution,
+    DLC_ATTRIBUTION:     DlcAttribution,
     PROV_ASSOCIATION:    ProvAssociation,
+    DLC_ASSOCIATION:     DlcAssociation,
     PROV_DELEGATION:     ProvDelegation,
+    DLC_DELEGATION:      DlcDelegation,
     PROV_INFLUENCE:      ProvInfluence,
     PROV_SPECIALIZATION: ProvSpecialization,
     PROV_ALTERNATE:      ProvAlternate,
     PROV_MENTION:        ProvMention,
     PROV_MEMBERSHIP:     ProvMembership,
+    DLC_MEMBERSHIP:      DlcMembership,
+    PROV_PARTITION:      ProvPartition,
+    DLC_PARTITION:       DlcPartition,
 }
 
 
-DEFAULT_NAMESPACES = {'prov': PROV, 'xsd': XSD, 'xsi': XSI}
+DEFAULT_NAMESPACES = {'prov': PROV, 'xsd': XSD, 'xsi': XSI ,'dlc':DLC , }
 
 
 #  Bundle
@@ -1266,6 +1551,7 @@ class ProvBundle(object):
         if records:
             for record in records:
                 self.add_record(record)
+                print(record)
 
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, self._identifier)
@@ -1310,7 +1596,7 @@ class ProvBundle(object):
         """
         Returns the list of all records in the current bundle
         """
-        return list(self._records)
+        return list(self._records)    #, print("test records", list(self._records))
 
     #  Bundle configurations
     def set_default_namespace(self, uri):
@@ -1632,6 +1918,50 @@ class ProvBundle(object):
         """
         return self.new_record(PROV_ENTITY, identifier, None, other_attributes)
 
+
+
+    def collection(self, identifier, other_attributes=None):
+        """
+        Creates a new collection record for a particular record.
+
+        :param identifier: Identifier for new collection record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        record = self.new_record(
+            PROV_ENTITY, identifier, None, other_attributes
+        )
+        record.add_asserted_type(PROV['Collection'])
+        return record
+
+    def pdb_file(self, identifier, other_attributes=None):
+        """
+        Creates a new pdb_file record for a particular record.
+
+        :param identifier: Identifier for new collection record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        record = self.new_record(
+            PROV_ENTITY, identifier, None, other_attributes
+        )
+        record.add_asserted_type(PROV['pdb_file'])
+        return record
+
+    def mmCIF(self, identifier, other_attributes=None):
+        """
+        Creates a new mmCIF record for a particular record.
+
+        :param identifier: Identifier for new collection record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        record = self.new_record(
+            PROV_ENTITY, identifier, None, other_attributes
+        )
+        record.add_asserted_type(PROV['mmCIF'])
+        return record
+
     def activity(self, identifier, startTime=None, endTime=None,
                  other_attributes=None):
         """
@@ -1670,8 +2000,35 @@ class ProvBundle(object):
         :param other_attributes: Optional other attributes as a dictionary or list
             of tuples to be added to the record optionally (default: None).
         """
+
+
         return self.new_record(
             PROV_GENERATION, identifier, {
+                PROV_ATTR_ENTITY: entity,
+                PROV_ATTR_ACTIVITY: activity,
+                PROV_ATTR_TIME: _ensure_datetime(time)
+            },
+            other_attributes
+        )
+
+    def dlc_generation(self, entity, activity=None, time=None, identifier=None,
+                   other_attributes=None):
+        """
+        Creates a new generation record for an entity.
+
+        :param entity: Entity or a string identifier for the entity.
+        :param activity: Activity or string identifier of the activity involved in
+            the generation (default: None).
+        :param time: Optional time for the generation (default: None).
+            Either a :py:class:`datetime.datetime` object or a string that can be
+            parsed by :py:func:`dateutil.parser`.
+        :param identifier: Identifier for new generation record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+
+        return self.new_record(
+            DLC_GENERATION, identifier, {
                 PROV_ATTR_ENTITY: entity,
                 PROV_ATTR_ACTIVITY: activity,
                 PROV_ATTR_TIME: _ensure_datetime(time)
@@ -1701,6 +2058,30 @@ class ProvBundle(object):
                 PROV_ATTR_TIME: _ensure_datetime(time)},
             other_attributes
         )
+
+    def dlc_usage(self, activity, entity=None, time=None, identifier=None,
+              other_attributes=None):
+        """
+        Creates a new plan usage record for an activity.
+
+        :param activity: Activity or a string identifier for the entity.
+        :param entity: Entity or string identifier of the entity involved in
+            the usage relationship (default: None).
+        :param time: Optional time for the usage (default: None).
+            Either a :py:class:`datetime.datetime` object or a string that can be
+            parsed by :py:func:`dateutil.parser`.
+        :param identifier: Identifier for new usage record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        return self.new_record(
+            DLC_USAGE, identifier, {
+                PROV_ATTR_ACTIVITY: activity,
+                PROV_ATTR_ENTITY: entity,
+                PROV_ATTR_TIME: _ensure_datetime(time)},
+            other_attributes
+        )
+
 
     def start(self, activity, trigger=None, starter=None, time=None,
               identifier=None, other_attributes=None):
@@ -1779,6 +2160,29 @@ class ProvBundle(object):
             },
             other_attributes
         )
+    def dlc_invalidation(self, entity, activity=None, time=None, identifier=None,
+                     other_attributes=None):
+        """
+        Creates a new invalidation record for an entity.
+
+        :param entity: Entity or a string identifier for the entity.
+        :param activity: Activity or string identifier of the activity involved in
+            the invalidation (default: None).
+        :param time: Optional time for the invalidation (default: None).
+            Either a :py:class:`datetime.datetime` object or a string that can be
+            parsed by :py:func:`dateutil.parser`.
+        :param identifier: Identifier for new invalidation record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        return self.new_record(
+            DLC_INVALIDATION, identifier, {
+                PROV_ATTR_ENTITY: entity,
+                PROV_ATTR_ACTIVITY: activity,
+                PROV_ATTR_TIME: _ensure_datetime(time)
+            },
+            other_attributes
+        )
 
     def communication(self, informed, informant, identifier=None,
                       other_attributes=None):
@@ -1799,6 +2203,68 @@ class ProvBundle(object):
             other_attributes
         )
 
+
+
+
+    def dlc_communication(self, informed, informant, identifier=None,
+                      other_attributes=None):
+        """
+        Creates a new communication record for an entity.
+
+        :param informed: The informed activity (relationship destination).
+        :param informant: The informing activity (relationship source).
+        :param identifier: Identifier for new communication record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        return self.new_record(
+            DLC_COMMUNICATION, identifier, {
+                PROV_ATTR_INFORMED: informed,
+                PROV_ATTR_INFORMANT: informant
+            },
+            other_attributes
+        )
+
+
+    def partition(self, informed, informant, identifier=None,
+                      other_attributes=None):
+        """
+        Creates a new communication record for an activity.
+
+        :param informed: The informed activity (relationship destination).
+        :param informant: The informing activity (relationship source).
+        :param identifier: Identifier for new communication record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        return self.new_record(
+            PROV_PARTITION, identifier, {
+                PROV_ATTR_INFORMED: informed,
+                PROV_ATTR_INFORMANT: informant
+            },
+            other_attributes
+        )
+
+    def dlc_partition(self, informed, informant, identifier=None,
+                      other_attributes=None):
+        """
+        Creates a new partition record for an activity.
+
+        :param informed: The informed activity (relationship destination).
+        :param informant: The informing activity (relationship source).
+        :param identifier: Identifier for new communication record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        return self.new_record(
+            DLC_PARTITION, identifier, {
+                PROV_ATTR_INFORMED: informed,
+                PROV_ATTR_INFORMANT: informant
+            },
+            other_attributes
+        )
+
+
     def agent(self, identifier, other_attributes=None):
         """
         Creates a new agent.
@@ -1808,6 +2274,53 @@ class ProvBundle(object):
             of tuples to be added to the record optionally (default: None).
         """
         return self.new_record(PROV_AGENT, identifier, None, other_attributes)
+
+
+    def softwareAgent(self, identifier, other_attributes=None):
+        """
+        Creates a new softwareAgent record for a particular record.
+
+        :param identifier: Identifier for new softwareAgent record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        record = self.new_record(
+            PROV_AGENT, identifier, None, other_attributes
+        )
+        record.add_asserted_type(PROV['softwareAgent'])
+        return record
+
+
+    def organisation(self, identifier, other_attributes=None):
+        """
+        Creates a new organisation record for a particular record.
+
+        :param identifier: Identifier for new organisation record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        record = self.new_record(
+            PROV_AGENT, identifier, None, other_attributes
+        )
+        record.add_asserted_type(PROV['Organisation'])
+        return record
+
+
+
+
+    def person(self, identifier, other_attributes=None):
+        """
+        Creates a new person record for a particular record.
+
+        :param identifier: Identifier for new person record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        record = self.new_record(
+            PROV_AGENT, identifier, None, other_attributes
+        )
+        record.add_asserted_type(PROV['Person'])
+        return record
 
     def attribution(self, entity, agent, identifier=None,
                     other_attributes=None):
@@ -1829,6 +2342,27 @@ class ProvBundle(object):
             },
             other_attributes
         )
+    def dlc_attribution(self, entity, agent, identifier=None,
+                    other_attributes=None):
+        """
+        Creates a new attribution record between an entity and an agent.
+
+        :param entity: Entity or a string identifier for the entity (relationship
+            source).
+        :param agent: Agent or string identifier of the agent involved in the
+            attribution (relationship destination).
+        :param identifier: Identifier for new attribution record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        return self.new_record(
+            DLC_ATTRIBUTION, identifier, {
+                PROV_ATTR_ENTITY: entity,
+                PROV_ATTR_AGENT: agent
+            },
+            other_attributes
+        )
+
 
     def association(self, activity, agent=None, plan=None, identifier=None,
                     other_attributes=None):
@@ -1853,6 +2387,32 @@ class ProvBundle(object):
             other_attributes
         )
 
+
+
+    def dlc_association(self, activity, agent=None, plan=None, identifier=None,
+                    other_attributes=None):
+        """
+        Creates a new association record for an activity.
+
+        :param activity: Activity or a string identifier for the activity.
+        :param agent: Agent or string identifier of the agent involved in the
+            association (default: None).
+        :param plan: Optionally extra entity to state qualified association through
+            an internal plan (default: None).
+        :param identifier: Identifier for new association record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        return self.new_record(
+            DLC_ASSOCIATION, identifier, {
+                PROV_ATTR_ACTIVITY: activity,
+                PROV_ATTR_AGENT: agent,
+                PROV_ATTR_PLAN: plan
+            },
+            other_attributes
+        )
+
+
     def delegation(self, delegate, responsible, activity=None, identifier=None,
                    other_attributes=None):
         """
@@ -1875,6 +2435,31 @@ class ProvBundle(object):
             },
             other_attributes
         )
+
+    def dlc_delegation(self, delegate, responsible, activity=None, identifier=None,
+                   other_attributes=None):
+        """
+        Creates a new delegation record on behalf of an agent.
+
+        :param delegate: Agent delegating the responsibility (relationship source).
+        :param responsible: Agent the responsibility is delegated to (relationship
+            destination).
+        :param activity: Optionally extra activity to state qualified delegation
+            internally (default: None).
+        :param identifier: Identifier for new association record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        return self.new_record(
+            DLC_DELEGATION, identifier, {
+                PROV_ATTR_DELEGATE: delegate,
+                PROV_ATTR_RESPONSIBLE: responsible,
+                PROV_ATTR_ACTIVITY: activity
+            },
+            other_attributes
+        )
+
+
 
     def influence(self, influencee, influencer, identifier=None,
                   other_attributes=None):
@@ -1923,6 +2508,34 @@ class ProvBundle(object):
                       PROV_ATTR_USAGE: usage}
         return self.new_record(
             PROV_DERIVATION, identifier, attributes, other_attributes
+        )
+
+    def dlc_derivation(self, generatedEntity, usedEntity, activity=None,
+                   generation=None, usage=None,
+                   identifier=None, other_attributes=None):
+        """
+        Creates a new derivation record for a generated entity from a used entity.
+
+        :param generatedEntity: Entity or a string identifier for the generated
+            entity (relationship source).
+        :param usedEntity: Entity or a string identifier for the used entity
+            (relationship destination).
+        :param activity: Activity or string identifier of the activity involved in
+            the derivation (default: None).
+        :param generation: Optionally extra activity to state qualified generation
+            through a generation (default: None).
+        :param usage: XXX (default: None).
+        :param identifier: Identifier for new derivation record.
+        :param other_attributes: Optional other attributes as a dictionary or list
+            of tuples to be added to the record optionally (default: None).
+        """
+        attributes = {PROV_ATTR_GENERATED_ENTITY: generatedEntity,
+                      PROV_ATTR_USED_ENTITY: usedEntity,
+                      PROV_ATTR_ACTIVITY: activity,
+                      PROV_ATTR_GENERATION: generation,
+                      PROV_ATTR_USAGE: usage}
+        return self.new_record(
+            DLC_DERIVATION, identifier, attributes, other_attributes
         )
 
     def revision(self, generatedEntity, usedEntity, activity=None,
@@ -2082,6 +2695,20 @@ class ProvBundle(object):
             }
         )
 
+    def dlc_membership(self, collection, entity):
+        """
+        Creates a new membership record for an entity to a collection.
+
+        :param collection: Collection the entity is to be added to.
+        :param entity: Entity to be added to the collection.
+        """
+        return self.new_record(
+            DLC_MEMBERSHIP, None, {
+                PROV_ATTR_COLLECTION: collection,
+                PROV_ATTR_ENTITY: entity
+            }
+        )
+
     def plot(self, filename=None, show_nary=True, use_labels=False,
              show_element_attributes=True, show_relation_attributes=True):
         """
@@ -2152,16 +2779,27 @@ class ProvBundle(object):
 
     #  Aliases
     wasGeneratedBy = generation
+    willBeGeneratedBy = dlc_generation
     used = usage
+    willUse = dlc_usage
     wasStartedBy = start
     wasEndedBy = end
     wasInvalidatedBy = invalidation
+    willBeInvalidatedBy = dlc_invalidation
     wasInformedBy = communication
+    willBeInformedBy = dlc_communication
+    wasPartOf = partition
     wasAttributedTo = attribution
+    willBeAttributedTo = dlc_attribution
     wasAssociatedWith = association
+    willBeAssociatedWith = dlc_association
     actedOnBehalfOf = delegation
+    willActOnBehalfOf = dlc_delegation
+    wasPartOf = partition
+    willBePartOf = dlc_partition
     wasInfluencedBy = influence
     wasDerivedFrom = derivation
+    willBeDerivedFrom = dlc_derivation
     wasRevisionOf = revision
     wasQuotedFrom = quotation
     hadPrimarySource = primary_source
@@ -2169,7 +2807,7 @@ class ProvBundle(object):
     specializationOf = specialization
     mentionOf = mention
     hadMember = membership
-
+    willHaveMember = dlc_membership
 
 class ProvDocument(ProvBundle):
     """Provenance Document."""
@@ -2246,7 +2884,7 @@ class ProvDocument(ProvBundle):
         """
         Flattens the document by moving all the records in its bundles up
         to the document level.
-
+&
         :returns: :py:class:`ProvDocument` -- the (new) flattened document.
         """
         if self._bundles:
@@ -2446,6 +3084,97 @@ class ProvDocument(ProvBundle):
             else:
                 with open(source) as f:
                     return serializer.deserialize(f, **args)
+
+
+    def mapping(self , other_prov_document ):
+
+
+
+        PROV_REC_PROV_DLC_MAPPING = {
+
+
+            PROV_GENERATION: DLC_GENERATION,
+            PROV_USAGE: DLC_USAGE,
+            PROV_COMMUNICATION: DLC_COMMUNICATION,
+            PROV_INVALIDATION: DLC_INVALIDATION,
+            PROV_DERIVATION:  DLC_DERIVATION,
+            PROV_ATTRIBUTION: DLC_ATTRIBUTION,
+            PROV_ASSOCIATION: DLC_ASSOCIATION,
+            PROV_DELEGATION:  DLC_DELEGATION,
+            PROV_MEMBERSHIP: DLC_MEMBERSHIP,
+        }
+
+        PROV_REC_DLC_PROV_MAPPING = {
+
+            DLC_GENERATION : PROV_GENERATION,
+            DLC_USAGE : PROV_USAGE,
+            DLC_COMMUNICATION : PROV_COMMUNICATION,
+            DLC_INVALIDATION : PROV_INVALIDATION,
+            DLC_DERIVATION : PROV_DERIVATION,
+            DLC_ATTRIBUTION : PROV_ATTRIBUTION,
+            DLC_ASSOCIATION : PROV_ASSOCIATION,
+            DLC_DELEGATION : PROV_DELEGATION,
+            DLC_MEMBERSHIP : PROV_MEMBERSHIP,
+        }
+
+        PROV_REC_STATIC = {
+            PROV_START: ProvStart,
+            PROV_END: ProvEnd,
+            PROV_INFLUENCE: ProvInfluence,
+            PROV_SPECIALIZATION: ProvSpecialization,
+            PROV_ALTERNATE: ProvAlternate,
+            PROV_MENTION: ProvMention,
+        }
+
+        list_record = self.get_records()
+        #print(list_record)
+
+        Dico = {}
+        for the_record in list_record:
+            #if the_record.startswith('wasGeneratedBy'):
+            #    print(the_record)
+            #else :
+            #copy = the_record.copy()
+            #print ("copy", copy)
+            if the_record.get_type() in PROV_REC_PROV_DLC_MAPPING :
+                Dico = PROV_REC_PROV_DLC_MAPPING
+            elif the_record.get_type() in PROV_REC_DLC_PROV_MAPPING :
+                Dico = PROV_REC_DLC_PROV_MAPPING
+
+        for the_record in list_record:
+            if the_record.is_element() is True :
+                type = the_record.get_type()
+                other_prov_document._add_record(the_record)
+                #print(type)
+
+            elif the_record.is_relation() is True and the_record.get_type() in PROV_REC_STATIC:
+                other_prov_document._add_record(the_record)
+
+            elif the_record.is_relation() is True :
+                #type = the_record.get_type()
+                #if type == PROV_GENERATION :
+                    #print('type' , type)
+                try:
+                    new_record = the_record.update_prov_type(Dico[the_record.get_type()]  )
+                    other_prov_document._add_record(new_record)
+                except:
+                    print("All relations are not in the same space")
+                    pass
+                    #print('yes' , type)
+
+                #print (type)
+                #test = the_record.is_relation()
+            #print("tessssttt" , test)
+            #other_prov_document._add_record(the_record)
+            #print("test_mapping"), print(the_record)
+
+
+
+
+
+
+
+
 
 
 def sorted_attributes(element, attributes):
