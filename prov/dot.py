@@ -23,16 +23,18 @@ import pydot
 import six
 
 from prov.model import (
-    PROV_ACTIVITY, PROV_AGENT, PROV_ALTERNATE, PROV_ASSOCIATION,
-    PROV_ATTRIBUTION, PROV_BUNDLE, PROV_COMMUNICATION, PROV_DERIVATION,
-    PROV_DELEGATION, PROV_ENTITY, PROV_GENERATION, PROV_INFLUENCE,
-    PROV_INVALIDATION, PROV_END, PROV_MEMBERSHIP, PROV_MENTION,
-    PROV_SPECIALIZATION, PROV_START, PROV_USAGE, Identifier,
+    PROV_ACTIVITY, PROV_AGENT, PROV_ALTERNATE, PROV_ASSOCIATION, DLC_ASSOCIATION,
+    PROV_ATTRIBUTION, DLC_ATTRIBUTION, PROV_BUNDLE, PROV_COMMUNICATION, DLC_COMMUNICATION, PROV_DERIVATION, DLC_DERIVATION,
+    PROV_DELEGATION, DLC_DELEGATION , PROV_ENTITY, PROV_GENERATION,DLC_GENERATION, PROV_INFLUENCE, PROV_PARTITION, DLC_PARTITION,
+    PROV_INVALIDATION, DLC_INVALIDATION, PROV_END, PROV_MEMBERSHIP, DLC_MEMBERSHIP , PROV_MENTION,
+    PROV_SPECIALIZATION, PROV_START, PROV_USAGE,DLC_USAGE, Identifier,
     PROV_ATTRIBUTE_QNAMES, sorted_attributes, ProvException
 )
 
 __author__ = 'Trung Dong Huynh'
 __email__ = 'trungdong@donggiang.com'
+
+
 
 
 # Visual styles for various elements (nodes) and relations (edges)
@@ -45,16 +47,16 @@ DOT_PROV_STYLE = {
     },
     # Elements
     PROV_ENTITY: {
-        'shape': 'oval', 'style': 'filled',
-        'fillcolor': '#FFFC87', 'color': '#808080'
+         'shape': 'oval', 'style': 'filled',
+        'fillcolor': '#FFFC87', 'color': '#808080' #, 'fontsize' : '20 '
     },
     PROV_ACTIVITY: {
         'shape': 'box', 'style': 'filled',
-        'fillcolor': '#9FB1FC', 'color': '#0000FF'
+        'fillcolor': '#9FB1FC', 'color': '#0000FF' #, 'fontsize' : '20 '
     },
     PROV_AGENT: {
         'shape': 'house', 'style': 'filled',
-        'fillcolor': '#FED37F'
+        'fillcolor': '#FED37F' #, 'fontsize' : '20 '
     },
     PROV_BUNDLE: {
         'shape': 'folder', 'style': 'filled',
@@ -62,55 +64,95 @@ DOT_PROV_STYLE = {
     },
     # Relations
     PROV_GENERATION: {
-        'label': 'wasGeneratedBy', 'fontsize': '10.0',
+        'label': '"prov:wasGeneratedBy"', 'fontsize': '13.0',
         'color': 'darkgreen', 'fontcolor': 'darkgreen'
     },
+    DLC_GENERATION: {
+        'style': 'dotted', 'penwidth':'4','label': '"dlc:willBeGeneratedBy"', 'fontsize': '13.0',
+        'color': 'green', 'fontcolor': 'green'
+    },
     PROV_USAGE: {
-        'label': 'used', 'fontsize': '10.0',
+        'label': 'used', 'fontsize': '13.0',
         'color': 'red4', 'fontcolor': 'red'
     },
+
+    DLC_USAGE: {
+        'style': 'dotted', 'penwidth':'4','label': '"dlc:willUse"', 'fontsize': '13.0',
+        'color': 'orangered1', 'fontcolor': 'red'
+    },
+
     PROV_COMMUNICATION: {
-        'label': 'wasInformedBy', 'fontsize': '10.0'
+        'label': '"prov:wasInformedBy"', 'fontsize': '13.0'
+    },
+    DLC_COMMUNICATION: {
+        'style': 'dotted', 'penwidth':'4','label': '"dlc:willBeInformedBy"', 'fontsize': '13.0'
     },
     PROV_START: {
-        'label': 'wasStartedBy', 'fontsize': '10.0'
+        'label': '"prov:wasStartedBy"', 'fontsize': '10.0'
     },
     PROV_END: {
-        'label': 'wasEndedBy', 'fontsize': '10.0'
+        'label': '"prov:wasEndedBy"', 'fontsize': '10.0'
     },
     PROV_INVALIDATION: {
-        'label': 'wasInvalidatedBy', 'fontsize': '10.0'
+        'label': '"prov:Invalidated"', 'fontsize': '10.0'
+    },
+    DLC_INVALIDATION: {
+        'style': 'dotted', 'penwidth':'4','label': '"dlc:willInvalidate"', 'fontsize': '10.0'
     },
     PROV_DERIVATION: {
-        'label': 'wasDerivedFrom', 'fontsize': '10.0'
+        'label': '"prov:wasDerivedFrom"', 'fontsize': '13.0'
+    },
+    DLC_DERIVATION: {
+        'style': 'dotted', 'penwidth':'4','label': '"dlc:willBeDerivedFrom"', 'fontsize': '13.0'
     },
     PROV_ATTRIBUTION: {
-        'label': 'wasAttributedTo', 'fontsize': '10.0',
+        'label': '"prov:wasAttributedTo"', 'fontsize': '13.0',
+        'color': 'orange' #'#FED37F'
+    },
+    DLC_ATTRIBUTION: {
+        'style': 'dotted', 'penwidth':'4','label': '"dlc:willBeAttributedTo"', 'fontsize': '13.0',
         'color': '#FED37F'
     },
     PROV_ASSOCIATION: {
-        'label': 'wasAssociatedWith', 'fontsize': '10.0',
-        'color': '#FED37F'
+        'label': '"prov:wasAssociatedWith"', 'fontsize': '13.0',
+        'color': 'orange' #'#FED37F'
+    },
+    DLC_ASSOCIATION: {
+        'style': 'dotted', 'penwidth':'4','label': '"dlc:willBeAssociatedWith"', 'fontsize': '13.0',
+        'color': '#FED37F' ,
     },
     PROV_DELEGATION: {
-        'label': 'actedOnBehalfOf', 'fontsize': '10.0',
+        'label': '"prov:actedOnBehalfOf"', 'fontsize': '13.0',
+        'color': 'orange' #'#FED37F'
+    },
+    DLC_DELEGATION: {
+        'style': 'dotted', 'penwidth':'4','label': '"dlc:willActOnBehalfOf"', 'fontsize': '13.0',
         'color': '#FED37F'
     },
     PROV_INFLUENCE: {
-        'label': 'wasInfluencedBy', 'fontsize': '10.0',
+        'label': '"prov:wasInfluencedBy"', 'fontsize': '13.0',
         'color': 'grey'
     },
     PROV_ALTERNATE: {
-        'label': 'alternateOf', 'fontsize': '10.0'
+        'label': '"prov:alternateOf"', 'fontsize': '13.0'
     },
     PROV_SPECIALIZATION: {
-        'label': 'specializationOf', 'fontsize': '10.0'
+        'label': '"prov:specializationOf"', 'fontsize': '13.0'
     },
     PROV_MENTION: {
-        'label': 'mentionOf', 'fontsize': '10.0'
+        'label': '"prov:mentionOf"', 'fontsize': '13.0'
     },
     PROV_MEMBERSHIP: {
-        'label': 'hadMember', 'fontsize': '10.0'
+        'label': '"prov:hadMember"', 'fontsize': '13.0'
+    },
+    DLC_MEMBERSHIP: {
+        'style': 'dotted', 'penwidth':'4','label': '"dlc:willHaveMember"', 'fontsize': '13.0'
+    },
+    PROV_PARTITION:{
+        'label': '"dlc:wasPartOf"', 'fontsize': '13.0'
+    },
+    DLC_PARTITION: {
+        'style': 'dotted', 'penwidth':'4', 'label': '"dlc:willBePartOf"', 'fontsize': '13.0'
     },
     }
 
@@ -160,7 +202,7 @@ def prov_to_dot(bundle, show_nary=True, use_labels=False,
     if direction not in {'BT', 'TB', 'LR', 'RL'}:
         # Invalid direction is provided
         direction = 'BT'  # reset it to the default value
-    maindot = pydot.Dot(graph_type='digraph', rankdir=direction, charset='utf-8')
+    maindot = pydot.Dot(graph_type='digraph', rankdir=direction, charset='utf-8' , ratio = "0.6" , ranksep = 0.2    ) #ranksep = "1.2 equally",ratio = '1.35',ranksep = "0.1" , nodesep  = "0.1" ,, ranksep = " 0.1 equally" , nodesep  = 0.10  , rank = "same"
 
     node_map = {}
     count = [0, 0, 0, 0]  # counters for node ids
@@ -246,7 +288,7 @@ def prov_to_dot(bundle, show_nary=True, use_labels=False,
             uri = record.identifier.uri
             style = DOT_PROV_STYLE[record.get_type()]
             node = pydot.Node(
-                node_id, label=node_label, URL='"%s"' % uri, **style
+                node_id, label=node_label, URL='"%s"' % uri,   **style
             )
             node_map[uri] = node
             dot.add_node(node)
@@ -360,4 +402,8 @@ def prov_to_dot(bundle, show_nary=True, use_labels=False,
         unified = bundle
 
     _bundle_to_dot(maindot, unified)
+
+#    test2 = maindot.get_node_list()
+#    for x in test2 :
+#        print (x.get_source())
     return maindot
