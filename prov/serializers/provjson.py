@@ -157,7 +157,9 @@ def encode_json_container(bundle):
     for record in bundle._records:
         rec_type = record.get_type()
         rec_label = PROV_N_MAP[rec_type]
+#        print("c'est un test", rec_label)
         identifier = six.text_type(real_or_anon_id(record))
+        print(" test identifier", identifier)
 
         record_json = {}
         if record._attributes:
@@ -186,6 +188,7 @@ def encode_json_container(bundle):
         if identifier not in container[rec_label]:
             # this is the first instance, just put in the new record
             container[rec_label][identifier] = record_json
+
         else:
             # the container already has some record(s) of the same identifier
             # check if this is the second instance

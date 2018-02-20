@@ -98,6 +98,7 @@ class ProvXMLSerializer(prov.serializers.Serializer):
                 # for PROV XML, but for all other serializations it does.
                 uri = uri.rstrip("#")
             nsmap[value.prefix] = uri
+ #           print('101' , uri)
 
         if element is not None:
             xml_bundle_root = etree.SubElement(
@@ -113,6 +114,7 @@ class ProvXMLSerializer(prov.serializers.Serializer):
             rec_type = record.get_type()
             identifier = six.text_type(record._identifier) \
                 if record._identifier else None
+#            print('117' , rec_type)
 
             if identifier:
                 attrs = {_ns_prov("id"): identifier}
@@ -130,6 +132,7 @@ class ProvXMLSerializer(prov.serializers.Serializer):
             for attr, value in sorted_attributes(rec_type, attributes):
                 subelem = etree.SubElement(
                     elem, _ns(attr.namespace.uri, attr.localpart))
+#                print('135' , subelem)
                 if isinstance(value, prov.model.Literal):
                     if value.datatype not in \
                             [None, PROV["InternationalizedString"]]:
@@ -203,7 +206,7 @@ class ProvXMLSerializer(prov.serializers.Serializer):
                     subelem.attrib[_ns_prov("ref")] = v
                 else:
                     subelem.text = v
-        return xml_bundle_root
+        return  xml_bundle_root
 
     def deserialize(self, stream, **kwargs):
         """
@@ -240,6 +243,7 @@ class ProvXMLSerializer(prov.serializers.Serializer):
 
         for element in xml_doc:
             qname = etree.QName(element)
+
             if qname.namespace != DEFAULT_NAMESPACES["prov"].uri:
                 raise ProvXMLException("Non PROV element discovered in "
                                        "document or bundle.")
